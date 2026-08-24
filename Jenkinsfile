@@ -35,7 +35,8 @@ pipeline {
 
         stage('Backend Package') {
             steps {
-                sh 'mvn -o -q -DskipTests -pl services/api -am package'
+                // Maven 로컬 저장소를 프로젝트 전용 폴더로 분리 (다른 프로젝트와 격리)
+                sh 'mvn -Dmaven.repo.local=/var/lib/jenkins/mydomain/m2-repository -q -DskipTests -pl services/api -am package'
             }
         }
 

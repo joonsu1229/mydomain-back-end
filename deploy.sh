@@ -8,6 +8,7 @@ WEB="$ROOT/apps/web"
 STATIC="$ROOT/services/api/src/main/resources/static"
 JAR="$ROOT/services/api/target/api-0.1.0-SNAPSHOT.jar"
 SERVICE="domainon"   # systemd 서비스명
+MVN_REPO="${MVN_REPO:-$HOME/mydomain/m2-repository}"   # Maven 로컬 저장소(프로젝트 전용, 격리)
 
 echo "==> [1/4] 프론트 빌드"
 cd "$WEB"
@@ -21,7 +22,7 @@ cp -r "$WEB/dist/." "$STATIC/"
 
 echo "==> [3/4] 백엔드 jar 패키징"
 cd "$ROOT"
-mvn -o -q -DskipTests -pl services/api -am package
+mvn -Dmaven.repo.local="$MVN_REPO" -q -DskipTests -pl services/api -am package
 
 echo "==> [4/4] 서비스 재시작"
 if systemctl is-enabled "$SERVICE" >/dev/null 2>&1; then
