@@ -3,9 +3,13 @@ pipeline {
 
     // 전제: Jenkins 에이전트에 node/npm + mvn + sudo(systemctl) 권한이 있어야 함
     stages {
-        stage('Checkout') {
+        stage('Checkout Frontend') {
             steps {
-                checkout scm
+                // 프론트는 별도 레포(mydomain-front-end) — apps/web에 클론
+                dir('apps/web') {
+                    git url: 'https://github.com/joonsu1229/mydomain-front-end.git',
+                        branch: 'main'
+                }
             }
         }
 
