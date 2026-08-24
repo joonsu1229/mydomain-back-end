@@ -28,7 +28,7 @@ public class EmailService {
     }
 
     public void sendPasswordResetEmail(String email, String name, String token) {
-        String resetUrl = "https://dev.clouddomain.dpdns.org/#/reset-password?token=" + token;
+        String resetUrl = "https://mydomain.rog.kr/#/reset-password?token=" + token;
         String subject = "[마이도메인] 비밀번호 재설정 안내";
 
         String body = String.format("""
@@ -69,7 +69,7 @@ public class EmailService {
     }
 
     public void sendVerificationEmail(String email, String name, String token) {
-        String verifyUrl = "https://dev.clouddomain.dpdns.org/#/verify?token=" + token;
+        String verifyUrl = "https://mydomain.rog.kr/#/verify?token=" + token;
         String subject = "[마이도메인] 이메일 인증을 완료해주세요";
 
         String body = String.format("""
