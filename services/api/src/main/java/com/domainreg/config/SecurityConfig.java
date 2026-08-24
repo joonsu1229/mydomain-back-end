@@ -85,7 +85,9 @@ public class SecurityConfig {
         config.setAllowedOrigins(List.of(
             "http://localhost:5173",
             "http://localhost:3000",
-            "https://dev.clouddomain.dpdns.org"
+            "https://dev.clouddomain.dpdns.org",
+            "https://mydomain.rog.kr",
+            "http://mydomain.rog.kr"
         ));
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         config.setAllowedHeaders(List.of("*"));
