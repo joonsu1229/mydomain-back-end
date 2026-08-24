@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.domainreg.persistence.mapper.NameserverMapper">
+
+    <select id="findByDomainId" resultType="com.domainreg.core.vo.Nameserver">
+        SELECT host, ip FROM domain_nameservers
+        WHERE domain_id = #{domainId}
+        ORDER BY sort_order
+    </select>
+
+    <insert id="insert">
+        INSERT INTO domain_nameservers (domain_id, host, ip, sort_order)
+        VALUES (#{domainId}, #{ns.host}, #{ns.ip}, 0)
+    </insert>
+
+    <delete id="deleteByDomainId">
+        DELETE FROM domain_nameservers WHERE domain_id = #{domainId}
+    </delete>
+
+</mapper>

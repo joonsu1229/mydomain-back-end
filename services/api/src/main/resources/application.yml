@@ -1,0 +1,76 @@
+server:
+  port: 5174
+
+spring:
+  datasource:
+    url: jdbc:postgresql://${DB_HOST:217.142.144.114}:${DB_PORT:5432}/${DB_NAME:postgres}?currentSchema=${DB_SCHEMA:domaindb}
+    username: ${DB_USER:postgreuser}
+    password: ${DB_PASS:}
+    driver-class-name: org.postgresql.Driver
+    hikari:
+      maximum-pool-size: 10
+      minimum-idle: 2
+      schema: ${DB_SCHEMA:domaindb}
+
+  flyway:
+    enabled: false
+
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+      timeout: 3000ms
+
+  jackson:
+    serialization:
+      write-dates-as-timestamps: false
+    default-property-inclusion: non_null
+
+  mail:
+    host: smtp.naver.com
+    port: 587
+    username: ${SMTP_USERNAME:}
+    password: ${SMTP_PASSWORD:}
+    properties:
+      mail.smtp.auth: true
+      mail.smtp.starttls.enable: true
+      mail.smtp.starttls.required: true
+
+mybatis:
+  mapper-locations: classpath:mappers/**/*.xml
+  type-aliases-package: com.domainreg.core.entity
+  configuration:
+    map-underscore-to-camel-case: true
+    default-fetch-size: 100
+    default-statement-timeout: 30
+
+logging:
+  level:
+    com.domainreg: DEBUG
+    org.mybatis: INFO
+
+app:
+  mail:
+    from: ${SMTP_FROM:}
+  jwt:
+    secret: ${JWT_SECRET:change-me-in-production-minimum-256-bits}
+    access-token-expiry: 15m
+    refresh-token-expiry: 7d
+  registrar:
+    mode: ${REGISTRAR_MODE:stub}
+  cloudflare:
+    api-token: ${CLOUDFLARE_API_TOKEN:}
+    base-url: ${CLOUDFLARE_BASE_URL:https://api.cloudflare.com/client/v4}
+  powerdns:
+    base-url: ${POWERDNS_BASE_URL:http://127.0.0.1:8081}
+    api-key: ${POWERDNS_API_KEY:}
+  payment:
+    mode: ${PAYMENT_MODE:stub}
+    toss:
+      secret-key: ${TOSS_SECRET_KEY:test_sk_example}
+      client-key: ${TOSS_CLIENT_KEY:test_ck_example}
+      base-url: https://api.tosspayments.com/v1
+  webhook:
+    secret: ${WEBHOOK_SECRET:webhook-secret-change-me}
+
+

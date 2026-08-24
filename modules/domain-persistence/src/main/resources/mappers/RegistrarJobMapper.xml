@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.domainreg.persistence.mapper.RegistrarJobMapper">
+
+    <resultMap id="JobMap" type="com.domainreg.core.entity.RegistrarJob">
+        <id property="id" column="id"/>
+        <result property="domainId" column="domain_id"/>
+        <result property="jobType" column="job_type"/>
+        <result property="payload" column="payload"/>
+        <result property="status" column="status"/>
+        <result property="attempts" column="attempts"/>
+        <result property="maxAttempts" column="max_attempts"/>
+        <result property="lastError" column="last_error"/>
+        <result property="nextRetryAt" column="next_retry_at"/>
+        <result property="createdAt" column="created_at"/>
+        <result property="updatedAt" column="updated_at"/>
+    </resultMap>
+
+    <select id="findPending" resultMap="JobMap">
+        SELECT * FROM registrar_jobs
+        WHERE status IN ('PENDING', 'FAILED')
+          AND (next_retry_at IS NULL OR next_retry_at &lt;= NOW())
+        ORDER BY created_at ASC
+        LIMIT #{limit}
+        FOR UPDATE SKIP LOCKED
+    </select>
+
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO registrar_jobs (domain_id, job_type, payload, status, attempts, max_attempts)
+        VALUES (#{domainId}, #{jobType}, #{payload}::jsonb, #{status}, #{attempts}, #{maxAttempts})
+    </insert>
+
+    <update id="updateStatus">
+        UPDATE registrar_jobs SET status = #{status}, updated_at = NOW() WHERE id = #{id}
+    </update>
+
+    <update id="scheduleRetry">
+        UPDATE registrar_jobs SET
+            status = 'FAILED',
+            attempts = #{attempts},
+            last_error = #{lastError},
+            next_retry_at = #{nextRetryAt},
+            updated_at = NOW()
+        WHERE id = #{id}
+    </update>
+
+    <update id="markDead">
+        UPDATE registrar_jobs SET
+            status = 'DEAD',
+            last_error = #{lastError},
+            updated_at = NOW()
+        WHERE id = #{id}
+    </update>
+
+    <select id="findByDomainId" resultMap="JobMap">
+        SELECT * FROM registrar_jobs WHERE domain_id = #{domainId} ORDER BY id DESC
+    </select>
+
+</mapper>

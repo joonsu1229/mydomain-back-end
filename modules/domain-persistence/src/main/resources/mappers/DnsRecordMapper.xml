@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.domainreg.persistence.mapper.DnsRecordMapper">
+
+    <resultMap id="DnsRecordMap" type="com.domainreg.core.entity.DnsRecord">
+        <id property="id" column="id"/>
+        <result property="domainId" column="domain_id"/>
+        <result property="recordType" column="record_type"/>
+        <result property="name" column="name"/>
+        <result property="content" column="content"/>
+        <result property="ttl" column="ttl"/>
+        <result property="priority" column="priority"/>
+        <result property="createdAt" column="created_at"/>
+        <result property="updatedAt" column="updated_at"/>
+    </resultMap>
+
+    <select id="findByDomainId" resultMap="DnsRecordMap">
+        SELECT * FROM dns_records WHERE domain_id = #{domainId}
+        ORDER BY record_type, name
+    </select>
+
+    <select id="findById" resultMap="DnsRecordMap">
+        SELECT * FROM dns_records WHERE id = #{id}
+    </select>
+
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO dns_records (domain_id, record_type, name, content, ttl, priority)
+        VALUES (#{domainId}, #{recordType}, #{name}, #{content}, #{ttl}, #{priority})
+    </insert>
+
+    <update id="update">
+        UPDATE dns_records SET
+            record_type = #{recordType},
+            name = #{name},
+            content = #{content},
+            ttl = #{ttl},
+            priority = #{priority},
+            updated_at = NOW()
+        WHERE id = #{id}
+    </update>
+
+    <delete id="delete">
+        DELETE FROM dns_records WHERE id = #{id}
+    </delete>
+
+</mapper>

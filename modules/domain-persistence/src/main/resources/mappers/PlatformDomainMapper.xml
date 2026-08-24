@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.domainreg.persistence.mapper.PlatformDomainMapper">
+
+    <resultMap id="PlatformDomainMap" type="com.domainreg.core.entity.PlatformDomain">
+        <id property="id" column="id"/>
+        <result property="nameUnicode" column="name_unicode"/>
+        <result property="namePunycode" column="name_punycode"/>
+        <result property="displayName" column="display_name"/>
+        <result property="description" column="description"/>
+        <result property="status" column="status"/>
+        <result property="registrarRef" column="registrar_ref"/>
+        <result property="nsDefault" column="ns_default"/>
+        <result property="verificationToken" column="verification_token"/>
+        <result property="verifiedAt" column="verified_at"/>
+        <result property="expiresAt" column="expires_at"/>
+        <result property="isActive" column="is_active"/>
+        <result property="createdAt" column="created_at"/>
+        <result property="updatedAt" column="updated_at"/>
+    </resultMap>
+
+    <select id="findById" resultMap="PlatformDomainMap">
+        SELECT * FROM platform_domains WHERE id = #{id}
+    </select>
+
+    <select id="findByPunycode" resultMap="PlatformDomainMap">
+        SELECT * FROM platform_domains WHERE name_punycode = #{punycode}
+    </select>
+
+    <select id="findAll" resultMap="PlatformDomainMap">
+        SELECT * FROM platform_domains ORDER BY created_at DESC
+    </select>
+
+    <select id="findAllActive" resultMap="PlatformDomainMap">
+        SELECT * FROM platform_domains
+        WHERE is_active = TRUE AND status = 'ACTIVE'
+          AND (expires_at IS NULL OR expires_at > NOW())
+        ORDER BY created_at DESC
+    </select>
+
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO platform_domains (name_unicode, name_punycode, display_name, description,
+                                      status, registrar_ref, ns_default, verification_token, expires_at, is_active)
+        VALUES (#{nameUnicode}, #{namePunycode}, #{displayName}, #{description},
+                #{status}, #{registrarRef}, #{nsDefault}, #{verificationToken}, #{expiresAt}, #{isActive})
+    </insert>
+
+    <update id="update">
+        UPDATE platform_domains SET
+            display_name = #{displayName},
+            description = #{description},
+            status = #{status},
+            registrar_ref = #{registrarRef},
+            ns_default = #{nsDefault},
+            verification_token = #{verificationToken},
+            verified_at = #{verifiedAt},
+            expires_at = #{expiresAt},
+            is_active = #{isActive},
+            updated_at = NOW()
+        WHERE id = #{id}
+    </update>
+
+    <delete id="delete">
+        UPDATE platform_domains SET is_active = FALSE, updated_at = NOW() WHERE id = #{id}
+    </delete>
+
+    <update id="detachDomains">
+        UPDATE domains SET platform_domain_id = NULL WHERE platform_domain_id = #{id}
+    </update>
+
+    <delete id="hardDeleteById">
+        DELETE FROM platform_domains WHERE id = #{id}
+    </delete>
+
+    <select id="countAll" resultType="long">
+        SELECT COUNT(*) FROM platform_domains WHERE is_active = TRUE
+    </select>
+
+</mapper>

@@ -1,0 +1,25 @@
+# ── 프론트(별도 레포지토리 mydomain-front-end) ──
+apps/
+
+# ── Java / Maven ──
+**/target/
+*.class
+
+# ── 프론트 빌드 결과물(백엔드 static 복사본) — deploy.sh가 재생성 ──
+services/api/src/main/resources/static/
+
+# ── IDE ──
+.idea/
+*.iml
+.vscode/
+
+# ── 로그 / 임시 ──
+*.log
+nohup.out
+
+# ── 시크릿(환경변수 파일) ──
+.env
+.env.*
+
+# 로컬 프로필(시크릿 포함 — 커밋 금지)
+services/api/src/main/resources/application-local.yml

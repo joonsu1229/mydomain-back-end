@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.domainreg.persistence.mapper.DomainMapper">
+
+    <resultMap id="DomainMap" type="com.domainreg.core.entity.Domain">
+        <id property="id" column="id"/>
+        <result property="userId" column="user_id"/>
+        <result property="nameUnicode" column="name_unicode"/>
+        <result property="namePunycode" column="name_punycode"/>
+        <result property="tld" column="tld"/>
+        <result property="platformDomainId" column="platform_domain_id"/>
+        <result property="status" column="status"/>
+        <result property="registrarRef" column="registrar_ref"/>
+        <result property="expiresAt" column="expires_at"/>
+        <result property="privacyEnabled" column="privacy_enabled"/>
+        <result property="paidAt" column="paid_at"/>
+        <result property="createdAt" column="created_at"/>
+        <result property="updatedAt" column="updated_at"/>
+    </resultMap>
+
+    <select id="findById" resultMap="DomainMap">
+        SELECT * FROM domains WHERE id = #{id}
+    </select>
+
+    <select id="findByPunycode" resultMap="DomainMap">
+        SELECT * FROM domains WHERE name_punycode = #{punycode}
+    </select>
+
+    <select id="findByUserId" resultMap="DomainMap">
+        SELECT * FROM domains WHERE user_id = #{userId}
+        ORDER BY created_at DESC
+    </select>
+
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO domains (user_id, name_unicode, name_punycode, tld, platform_domain_id, status,
+                             registrar_ref, expires_at, privacy_enabled, paid_at)
+        VALUES (#{userId}, #{nameUnicode}, #{namePunycode}, #{tld}, #{platformDomainId}, #{status},
+                #{registrarRef}, #{expiresAt}, #{privacyEnabled}, #{paidAt})
+    </insert>
+
+    <update id="update">
+        UPDATE domains SET
+            status = #{status},
+            registrar_ref = #{registrarRef},
+            expires_at = #{expiresAt},
+            privacy_enabled = #{privacyEnabled},
+            paid_at = #{paidAt},
+            platform_domain_id = #{platformDomainId},
+            updated_at = NOW()
+        WHERE id = #{id}
+    </update>
+
+    <update id="updateStatus">
+        UPDATE domains SET status = #{status}, updated_at = NOW() WHERE id = #{id}
+    </update>
+
+    <select id="existsByPunycode" resultType="boolean">
+        SELECT EXISTS(SELECT 1 FROM domains WHERE name_punycode = #{punycode})
+    </select>
+
+    <select id="countAll" resultType="long">
+        SELECT COUNT(*) FROM domains
+    </select>
+
+    <select id="countByStatus" resultType="long">
+        SELECT COUNT(*) FROM domains WHERE status = #{status}
+    </select>
+
+    <select id="findAllWithUser" resultMap="DomainMap">
+        SELECT * FROM domains ORDER BY created_at DESC
+    </select>
+
+    <select id="existsByPunycodeAndPlatform" resultType="boolean">
+        SELECT EXISTS(SELECT 1 FROM domains
+                       WHERE name_punycode = #{punycode}
+                         AND platform_domain_id = #{platformDomainId})
+    </select>
+
+    <select id="findByPlatformDomainId" resultMap="DomainMap">
+        SELECT * FROM domains WHERE platform_domain_id = #{platformDomainId}
+        ORDER BY created_at DESC
+    </select>
+
+    <delete id="deletePaymentsByDomainId">
+        DELETE FROM payments WHERE order_id IN (SELECT id FROM orders WHERE domain_id = #{id})
+    </delete>
+
+    <delete id="deleteOrdersByDomainId">
+        DELETE FROM orders WHERE domain_id = #{id}
+    </delete>
+
+    <delete id="deletePrivacyByDomainId">
+        DELETE FROM privacy_profiles WHERE domain_id = #{id}
+    </delete>
+
+    <delete id="deleteRegistrarJobsByDomainId">
+        DELETE FROM registrar_jobs WHERE domain_id = #{id}
+    </delete>
+
+    <delete id="deleteById">
+        DELETE FROM domains WHERE id = #{id}
+    </delete>
+
+</mapper>

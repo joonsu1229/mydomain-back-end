@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.domainreg.persistence.mapper.PrivacyProfileMapper">
+
+    <resultMap id="PrivacyMap" type="com.domainreg.core.entity.PrivacyProfile">
+        <id property="id" column="id"/>
+        <result property="domainId" column="domain_id"/>
+        <result property="proxyEmail" column="proxy_email"/>
+        <result property="proxyPhone" column="proxy_phone"/>
+        <result property="enabledAt" column="enabled_at"/>
+        <result property="createdAt" column="created_at"/>
+    </resultMap>
+
+    <select id="findByDomainId" resultMap="PrivacyMap">
+        SELECT * FROM privacy_profiles WHERE domain_id = #{domainId}
+    </select>
+
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO privacy_profiles (domain_id, proxy_email, proxy_phone, enabled_at)
+        VALUES (#{domainId}, #{proxyEmail}, #{proxyPhone}, #{enabledAt})
+    </insert>
+
+    <update id="update">
+        UPDATE privacy_profiles SET
+            proxy_email = #{proxyEmail},
+            proxy_phone = #{proxyPhone},
+            enabled_at = #{enabledAt}
+        WHERE domain_id = #{domainId}
+    </update>
+
+    <delete id="deleteByDomainId">
+        DELETE FROM privacy_profiles WHERE domain_id = #{domainId}
+    </delete>
+
+</mapper>
