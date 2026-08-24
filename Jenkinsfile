@@ -8,7 +8,8 @@ pipeline {
                 // 프론트는 별도 레포(mydomain-front-end) — apps/web에 클론
                 dir('apps/web') {
                     git url: 'https://github.com/joonsu1229/mydomain-front-end.git',
-                        branch: 'main'
+                        branch: 'main',
+                        credentialsId: 'github-pat'
                 }
             }
         }
