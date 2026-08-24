@@ -42,7 +42,10 @@ pipeline {
 
         stage('Deploy') {
             steps {
-                sh 'sudo systemctl restart domainon'
+                sh '''
+                    cp services/api/target/api-0.1.0-SNAPSHOT.jar /home/ubuntu/domain-platform/deploy/api-0.1.0-SNAPSHOT.jar
+                    sudo systemctl restart domainon
+                '''
             }
         }
     }
