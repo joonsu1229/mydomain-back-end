@@ -13,8 +13,8 @@ import java.util.UUID;
 @Service
 public class PlatformDomainService {
 
-    private static final String DNS_PREFIX = "_domainon.";
-    private static final String TOKEN_PREFIX = "domainon-verify=";
+    private static final String DNS_PREFIX = "_mydomain.";
+    private static final String TOKEN_PREFIX = "mydomain-verify=";
 
     private final PlatformDomainRepository repository;
     private final DnsLookup dnsLookup;
@@ -88,7 +88,7 @@ public class PlatformDomainService {
 
     /**
      * Verify domain ownership via DNS TXT record.
-     * Looks up _domainon.{domain} and checks for TXT record matching the verification token.
+     * Looks up _mydomain.{domain} and checks for TXT record matching the verification token.
      */
     @Transactional
     public PlatformDomain verifyDomain(Long id) {
@@ -102,7 +102,7 @@ public class PlatformDomainService {
             throw new PlatformDomainException("NO_TOKEN", "인증 토큰이 없습니다. 다시 등록해주세요.");
         }
 
-        // DNS TXT lookup: _domainon.example.kr
+        // DNS TXT lookup: _mydomain.example.kr
         String verificationHost = DNS_PREFIX + pd.getNameUnicode();
         List<String> txtRecords = dnsLookup.lookupTxt(verificationHost);
 

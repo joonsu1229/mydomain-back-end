@@ -29,7 +29,7 @@ public class EmailService {
 
     public void sendPasswordResetEmail(String email, String name, String token) {
         String resetUrl = "https://dev.clouddomain.dpdns.org/#/reset-password?token=" + token;
-        String subject = "[도메인온] 비밀번호 재설정 안내";
+        String subject = "[마이도메인] 비밀번호 재설정 안내";
 
         String body = String.format("""
             <div style="max-width:480px;margin:0 auto;font-family:sans-serif;">
@@ -70,13 +70,13 @@ public class EmailService {
 
     public void sendVerificationEmail(String email, String name, String token) {
         String verifyUrl = "https://dev.clouddomain.dpdns.org/#/verify?token=" + token;
-        String subject = "[도메인온] 이메일 인증을 완료해주세요";
+        String subject = "[마이도메인] 이메일 인증을 완료해주세요";
 
         String body = String.format("""
             <div style="max-width:480px;margin:0 auto;font-family:sans-serif;">
               <h2 style="color:#1a1a1a;">안녕하세요, %s님! 👋</h2>
               <p style="color:#555;line-height:1.6;">
-                도메인온 회원가입을 위한 <strong>이메일 인증</strong>입니다.<br/>
+                마이도메인 회원가입을 위한 <strong>이메일 인증</strong>입니다.<br/>
                 아래 버튼을 클릭하면 인증이 완료됩니다:
               </p>
               <a href="%s"
