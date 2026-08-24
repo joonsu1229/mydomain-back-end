@@ -1,5 +1,6 @@
 package com.domainreg.service;
 
+import com.domainreg.core.entity.User;
 import com.domainreg.persistence.mapper.UserMapper;
 import org.springframework.data.redis.connection.RedisServerCommands;
 import org.springframework.data.redis.core.StringRedisTemplate;
@@ -13,10 +14,12 @@ public class RedisAdminService {
 
     private final StringRedisTemplate redis;
     private final UserMapper userMapper;
+    private final EmailService emailService;
 
-    public RedisAdminService(StringRedisTemplate redis, UserMapper userMapper) {
+    public RedisAdminService(StringRedisTemplate redis, UserMapper userMapper, EmailService emailService) {
         this.redis = redis;
         this.userMapper = userMapper;
+        this.emailService = emailService;
     }
 
     // ──────────────────────────────────────────────
@@ -225,6 +228,34 @@ public class RedisAdminService {
         Boolean deleted = redis.delete("verify_token:" + fullToken);
         return Map.of("deleted", deleted, "message",
             deleted ? "인증 토큰이 만료되었습니다." : "해당 인증 토큰을 찾을 수 없습니다.");
+    }
+
+    public Map<String, Object> resendVerificationEmail(String email) {
+        Optional<User> userOpt = userMapper.findByEmail(email);
+        if (userOpt.isEmpty()) {
+            return Map.of("resent", false, "message", "해당 이메일로 등록된 사용자를 찾을 수 없습니다.");
+        }
+        User user = userOpt.get();
+
+        if (user.isEmailVerified()) {
+            return Map.of("resent", false, "message", "이미 인증이 완료된 계정입니다.");
+        }
+
+        String oldToken = user.getVerificationToken();
+        String newToken = UUID.randomUUID().toString().replace("-", "");
+
+        // DB의 인증 토큰을 새 토큰으로 교체
+        userMapper.updateVerificationToken(user.getId(), newToken);
+
+        // 기존 Redis verify 토큰 제거 (새 키는 sendVerificationEmail 내부에서 생성)
+        if (oldToken != null && !oldToken.isBlank()) {
+            redis.delete("verify_token:" + oldToken);
+        }
+
+        // 인증 메일 재발송
+        emailService.sendVerificationEmail(user.getEmail(), user.getName(), newToken);
+
+        return Map.of("resent", true, "message", user.getEmail() + " 인증 메일을 재발송했습니다.");
     }
 
     public Map<String, Object> clearRateLimits() {

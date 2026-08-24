@@ -69,6 +69,11 @@
         WHERE id = #{id}
     </update>
 
+    <update id="updateVerificationToken">
+        UPDATE users SET verification_token = #{token}, updated_at = NOW()
+        WHERE id = #{id}
+    </update>
+
     <select id="findAll" resultMap="UserMap">
         SELECT * FROM users ORDER BY created_at DESC
     </select>

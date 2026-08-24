@@ -52,6 +52,7 @@ logging:
 app:
   mail:
     from: ${SMTP_FROM:}
+  web-base-url: ${APP_WEB_BASE_URL:https://mydomain.rog.kr}
   jwt:
     secret: ${JWT_SECRET:change-me-in-production-minimum-256-bits}
     access-token-expiry: 15m

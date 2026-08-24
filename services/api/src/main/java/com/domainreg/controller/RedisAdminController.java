@@ -66,6 +66,16 @@ public class RedisAdminController {
         return ResponseEntity.ok(redisAdminService.deleteVerificationToken(fullToken));
     }
 
+    // ── Resend verification email ──
+    @PostMapping("/redis/verify/resend")
+    public ResponseEntity<Map<String, Object>> resendVerificationEmail(@RequestBody Map<String, String> body) {
+        String email = body.get("email");
+        if (email == null || email.isBlank()) {
+            return ResponseEntity.badRequest().body(Map.of("resent", false, "message", "이메일을 입력해주세요."));
+        }
+        return ResponseEntity.ok(redisAdminService.resendVerificationEmail(email));
+    }
+
     // ── Existing: clear rate limits ──
     @DeleteMapping("/redis/rate-limits")
     public ResponseEntity<Map<String, Object>> clearRateLimits() {

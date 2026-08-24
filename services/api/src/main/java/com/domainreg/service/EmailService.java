@@ -19,16 +19,19 @@ public class EmailService {
     private final StringRedisTemplate redis;
     private final JavaMailSender mailSender;
     private final String fromAddress;
+    private final String webBaseUrl;
 
     public EmailService(StringRedisTemplate redis, JavaMailSender mailSender,
-                        @Value("${app.mail.from:}") String fromAddress) {
+                        @Value("${app.mail.from:}") String fromAddress,
+                        @Value("${app.web-base-url:https://mydomain.rog.kr}") String webBaseUrl) {
         this.redis = redis;
         this.mailSender = mailSender;
         this.fromAddress = fromAddress;
+        this.webBaseUrl = webBaseUrl;
     }
 
     public void sendPasswordResetEmail(String email, String name, String token) {
-        String resetUrl = "https://mydomain.rog.kr/#/reset-password?token=" + token;
+        String resetUrl = webBaseUrl + "/#/reset-password?token=" + token;
         String subject = "[마이도메인] 비밀번호 재설정 안내";
 
         String body = String.format("""
@@ -69,7 +72,7 @@ public class EmailService {
     }
 
     public void sendVerificationEmail(String email, String name, String token) {
-        String verifyUrl = "https://mydomain.rog.kr/#/verify?token=" + token;
+        String verifyUrl = webBaseUrl + "/#/verify?token=" + token;
         String subject = "[마이도메인] 이메일 인증을 완료해주세요";
 
         String body = String.format("""

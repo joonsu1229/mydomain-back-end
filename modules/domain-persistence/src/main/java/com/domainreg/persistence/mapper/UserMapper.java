@@ -18,6 +18,7 @@ public interface UserMapper {
     boolean existsByLoginId(@Param("loginId") String loginId);
     Optional<User> findByVerificationToken(@Param("token") String token);
     void verifyEmail(@Param("id") Long id);
+    void updateVerificationToken(@Param("id") Long id, @Param("token") String token);
     long countAll();
     List<User> findAll();
 
