@@ -158,6 +158,12 @@ public class RegistrarJobWorker {
 
         List<DnsRecord> records = dnsRecordMapper.findByDomainId(domain.getId());
         registrarClient.syncDnsRecords(zoneName, domain.getNameUnicode(), records);
+
+        // Sync 성공 시, 이전에 실패했던 도메인은 ACTIVE로 복구
+        if (domain.getStatus() == DomainStatus.FAILED) {
+            domainRepository.updateStatus(domain.getId(), DomainStatus.ACTIVE);
+        }
+
         log.info("DNS records synced for: {} -> zone {} ({} records)",
             domain.getNameUnicode(), zoneName, records.size());
     }
