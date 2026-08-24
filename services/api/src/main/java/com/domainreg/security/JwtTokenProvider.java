@@ -25,6 +25,9 @@ public class JwtTokenProvider {
     @Value("${app.jwt.refresh-token-expiry:7d}")
     private Duration refreshExpiry;
 
+    @Value("${app.jwt.session-idle-timeout:30m}")
+    private Duration sessionIdleTimeout;
+
     private SecretKey key;
 
     @PostConstruct
@@ -73,6 +76,14 @@ public class JwtTokenProvider {
 
     public Long getUserId(Claims claims) {
         return Long.parseLong(claims.getSubject());
+    }
+
+    public Duration getAccessExpiry() {
+        return accessExpiry;
+    }
+
+    public Duration getSessionIdleTimeout() {
+        return sessionIdleTimeout;
     }
 
     public boolean isTokenValid(String token) {

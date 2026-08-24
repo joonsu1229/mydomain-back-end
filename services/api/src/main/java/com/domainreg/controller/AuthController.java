@@ -92,7 +92,9 @@ public class AuthController {
 
     @PostMapping("/logout")
     public ResponseEntity<Void> logout(@AuthenticationPrincipal UserPrincipal principal) {
-        authService.logout(principal.getUserId());
+        if (principal != null) {
+            authService.logout(principal.getUserId());
+        }
         return ResponseEntity.noContent().build();
     }
 

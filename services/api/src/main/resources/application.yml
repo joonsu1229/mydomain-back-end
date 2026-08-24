@@ -56,6 +56,7 @@ app:
     secret: ${JWT_SECRET:change-me-in-production-minimum-256-bits}
     access-token-expiry: 15m
     refresh-token-expiry: 7d
+    session-idle-timeout: 30m
   registrar:
     mode: ${REGISTRAR_MODE:stub}
   cloudflare:

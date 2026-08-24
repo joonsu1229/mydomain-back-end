@@ -143,6 +143,8 @@ public class AuthService {
         }
 
         userRepository.recordLoginSuccess(user.getId(), ip);
+        // 이전 로그아웃/강제 로그아웃으로 남아있던 액세스 토큰 차단 플래그 해제
+        redis.delete("revoked:" + user.getId());
         return issueTokens(user);
     }
 
@@ -166,7 +168,9 @@ public class AuthService {
     }
 
     public void logout(Long userId) {
+        // 리프레시 토큰 삭제 + 아직 유효한 액세스 토큰을 남은 수명만큼 즉시 차단
         redis.delete("refresh:" + userId);
+        redis.opsForValue().set("revoked:" + userId, "1", tokenProvider.getAccessExpiry());
     }
 
     // ═══════════════════════════════════════════
@@ -211,10 +215,12 @@ public class AuthService {
             user.getId(), user.getLoginId(), user.getEmail(), user.getRole());
         String refreshToken = tokenProvider.createRefreshToken(user.getId());
 
+        // 세션 유휴시간(기본 30분): 호출이 없으면 이 TTL이 지나 만료 → 자동 로그아웃.
+        // 요청이 계속 오면 필터가 TTL을 연장하므로 슬라이딩 방식으로 유지된다.
         redis.opsForValue().set(
             "refresh:" + user.getId(),
             refreshToken,
-            Duration.ofDays(7)
+            tokenProvider.getSessionIdleTimeout()
         );
 
         return new AuthToken(accessToken, refreshToken);

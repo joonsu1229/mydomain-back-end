@@ -6,6 +6,7 @@ import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -24,6 +25,9 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     private final JwtTokenProvider tokenProvider;
     private final UserMapper userMapper;
     private final StringRedisTemplate redis;
+
+    @Value("${app.jwt.session-idle-timeout:30m}")
+    private Duration sessionIdleTimeout;
 
     public JwtAuthenticationFilter(JwtTokenProvider tokenProvider,
                                    UserMapper userMapper,
@@ -52,6 +56,9 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 filterChain.doFilter(request, response);
                 return;
             }
+
+            // 슬라이딩 세션: 인증된 요청이 오면 유휴시간 TTL을 연장
+            redis.expire("refresh:" + userId, sessionIdleTimeout);
 
             // Look up role: Redis cache → DB fallback → JWT fallback
             String role = lookupRole(userId, claims);
