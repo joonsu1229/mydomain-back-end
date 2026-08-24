@@ -9,7 +9,7 @@ pipeline {
                 dir('apps/web') {
                     git url: 'https://github.com/joonsu1229/mydomain-front-end.git',
                         branch: 'main',
-                        credentialsId: 'github-pat'
+                        credentialsId: 'joonsu1229'
                 }
             }
         }
