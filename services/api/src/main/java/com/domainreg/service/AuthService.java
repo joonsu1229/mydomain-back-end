@@ -12,6 +12,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Duration;
 import java.time.Instant;
+import java.util.Locale;
+import java.util.Set;
 import java.util.UUID;
 
 @Service
@@ -19,6 +21,18 @@ public class AuthService {
 
     private static final int MAX_FAILED_ATTEMPTS = 5;
     private static final Duration LOCK_DURATION = Duration.ofMinutes(15);
+
+    // 가입 허용 이메일 도메인 (공신력 있는 이메일 제공자만 허용)
+    private static final Set<String> ALLOWED_EMAIL_DOMAINS = Set.of(
+        "gmail.com",
+        "naver.com",
+        "daum.net",
+        "hanmail.net",
+        "kakao.com",
+        "outlook.com",
+        "hotmail.com",
+        "icloud.com"
+    );
 
     private final UserRepository userRepository;
     private final UserMapper userMapper;
@@ -55,6 +69,12 @@ public class AuthService {
         if (loginId.length() < 3 || loginId.length() > 30) {
             throw new AuthException("INVALID_USERNAME",
                 "아이디는 3자 이상 30자 이하여야 합니다.");
+        }
+
+        // 이메일 도메인 검증: 공신력 있는 이메일 제공자만 허용
+        if (!ALLOWED_EMAIL_DOMAINS.contains(extractDomain(email))) {
+            throw new AuthException("INVALID_EMAIL_DOMAIN",
+                "지원하지 않는 이메일 도메인입니다. gmail, naver, daum 등 공신력 있는 이메일만 가입할 수 있어요.");
         }
 
         // Check duplicate loginId
@@ -211,6 +231,14 @@ public class AuthService {
 
     public boolean emailExists(String email) {
         return userRepository.existsByEmail(email);
+    }
+
+    private static String extractDomain(String email) {
+        int at = email.indexOf('@');
+        if (at < 0 || at == email.length() - 1) {
+            return "";
+        }
+        return email.substring(at + 1).trim().toLowerCase(Locale.ROOT);
     }
 
     public record AuthToken(String accessToken, String refreshToken) {}
