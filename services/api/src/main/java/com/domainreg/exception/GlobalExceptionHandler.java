@@ -5,6 +5,7 @@ import com.domainreg.service.AuthService.AuthException;
 import com.domainreg.service.OrderService.OrderException;
 import com.domainreg.service.PaymentService.PaymentException;
 import com.domainreg.service.PlatformDomainService.PlatformDomainException;
+import com.domainreg.service.TermsService.TermsException;
 import com.domainreg.core.service.PaidGateEnforcer.PaymentRequiredException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -58,6 +59,17 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(PlatformDomainException.class)
     public ResponseEntity<ErrorResponse> handlePlatformDomain(PlatformDomainException e) {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+            .body(new ErrorResponse(e.getCode(), e.getMessage()));
+    }
+
+    @ExceptionHandler(TermsException.class)
+    public ResponseEntity<ErrorResponse> handleTerms(TermsException e) {
+        HttpStatus status = switch (e.getCode()) {
+            case "NOT_FOUND" -> HttpStatus.NOT_FOUND;
+            case "INVALID_STATE" -> HttpStatus.CONFLICT;
+            default -> HttpStatus.BAD_REQUEST;
+        };
+        return ResponseEntity.status(status)
             .body(new ErrorResponse(e.getCode(), e.getMessage()));
     }
 

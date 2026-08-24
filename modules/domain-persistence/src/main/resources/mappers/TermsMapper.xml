@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.domainreg.persistence.mapper.TermsMapper">
+
+    <resultMap id="TermsMap" type="com.domainreg.core.entity.Terms">
+        <id property="id" column="id"/>
+        <result property="type" column="type"/>
+        <result property="version" column="version"/>
+        <result property="title" column="title"/>
+        <result property="content" column="content"/>
+        <result property="isCurrent" column="is_current"/>
+        <result property="publishedAt" column="published_at"/>
+        <result property="createdAt" column="created_at"/>
+        <result property="updatedAt" column="updated_at"/>
+        <result property="agreementCount" column="agreement_count"/>
+    </resultMap>
+
+    <select id="findAll" resultMap="TermsMap">
+        SELECT t.*,
+               (SELECT COUNT(*) FROM user_terms_agreements a WHERE a.terms_id = t.id) AS agreement_count
+        FROM terms t
+        ORDER BY t.type ASC, t.version DESC
+    </select>
+
+    <select id="findCurrentAll" resultMap="TermsMap">
+        SELECT t.* FROM terms t
+        WHERE t.is_current = TRUE
+        ORDER BY t.type ASC
+    </select>
+
+    <select id="findById" resultMap="TermsMap">
+        SELECT t.* FROM terms t WHERE t.id = #{id}
+    </select>
+
+    <select id="findMaxVersion" resultType="int">
+        SELECT COALESCE(MAX(version), 0) FROM terms WHERE type = #{type}
+    </select>
+
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO terms (type, version, title, content, is_current)
+        VALUES (#{type}, #{version}, #{title}, #{content}, #{isCurrent})
+    </insert>
+
+    <update id="updateContent">
+        UPDATE terms SET title = #{title}, content = #{content}, updated_at = NOW()
+        WHERE id = #{id}
+    </update>
+
+    <update id="clearCurrent">
+        UPDATE terms SET is_current = FALSE, updated_at = NOW()
+        WHERE type = #{type}
+    </update>
+
+    <update id="publish">
+        UPDATE terms SET is_current = TRUE, published_at = NOW(), updated_at = NOW()
+        WHERE id = #{id}
+    </update>
+
+    <delete id="delete">
+        DELETE FROM terms WHERE id = #{id}
+    </delete>
+
+</mapper>

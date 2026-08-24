@@ -24,9 +24,11 @@ public class AuthController {
     }
 
     @PostMapping("/register")
-    public ResponseEntity<Map<String, Object>> register(@Valid @RequestBody RegisterRequest request) {
+    public ResponseEntity<Map<String, Object>> register(@Valid @RequestBody RegisterRequest request,
+                                                        HttpServletRequest httpRequest) {
+        String ip = getClientIp(httpRequest);
         User user = authService.register(request.loginId(), request.email(), request.password(),
-            request.name(), request.phone());
+            request.name(), request.phone(), request.termsId(), request.privacyId(), ip);
         return ResponseEntity.status(HttpStatus.CREATED).body(Map.of(
             "message", "인증 이메일을 발송했습니다. 이메일을 확인해주세요.",
             "loginId", user.getLoginId(),

@@ -8,6 +8,7 @@ import io.jsonwebtoken.Claims;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Duration;
 import java.time.Instant;
@@ -25,22 +26,27 @@ public class AuthService {
     private final JwtTokenProvider tokenProvider;
     private final StringRedisTemplate redis;
     private final EmailService emailService;
+    private final TermsService termsService;
 
     public AuthService(UserRepository userRepository,
                        UserMapper userMapper,
                        PasswordEncoder passwordEncoder,
                        JwtTokenProvider tokenProvider,
                        StringRedisTemplate redis,
-                       EmailService emailService) {
+                       EmailService emailService,
+                       TermsService termsService) {
         this.userRepository = userRepository;
         this.userMapper = userMapper;
         this.passwordEncoder = passwordEncoder;
         this.tokenProvider = tokenProvider;
         this.redis = redis;
         this.emailService = emailService;
+        this.termsService = termsService;
     }
 
-    public User register(String loginId, String email, String password, String name, String phone) {
+    @Transactional
+    public User register(String loginId, String email, String password, String name, String phone,
+                         Long termsId, Long privacyId, String ip) {
         // Validate loginId format
         if (!loginId.matches("^[a-zA-Z0-9]+$")) {
             throw new AuthException("INVALID_USERNAME",
@@ -65,6 +71,9 @@ public class AuthService {
         User user = User.create(loginId, email, passwordEncoder.encode(password), name, phone);
         user.setVerificationToken(token);
         user = userRepository.save(user);
+
+        // Record agreement to the current TERMS & PRIVACY versions
+        termsService.recordAgreements(user.getId(), termsId, privacyId, ip);
 
         // Send verification email
         emailService.sendVerificationEmail(email, name, token);

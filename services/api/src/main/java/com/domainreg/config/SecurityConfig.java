@@ -49,6 +49,7 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.GET, "/api/auth/reset-password/validate").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/domains/search").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/platform-domains/**").permitAll()
+                .requestMatchers(HttpMethod.GET, "/api/terms/**").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/public/**").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/ads/placements").permitAll()
                 // 정적 리소스(프론트 빌드 결과물)는 인증 없이 제공
