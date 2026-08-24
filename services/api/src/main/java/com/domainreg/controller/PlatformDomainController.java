@@ -2,6 +2,7 @@ package com.domainreg.controller;
 
 import com.domainreg.core.entity.PlatformDomain;
 import com.domainreg.service.PlatformDomainService;
+import com.domainreg.service.PlatformDnsRecordService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -18,9 +19,12 @@ import java.util.Map;
 public class PlatformDomainController {
 
     private final PlatformDomainService platformDomainService;
+    private final PlatformDnsRecordService platformDnsRecordService;
 
-    public PlatformDomainController(PlatformDomainService platformDomainService) {
+    public PlatformDomainController(PlatformDomainService platformDomainService,
+                                    PlatformDnsRecordService platformDnsRecordService) {
         this.platformDomainService = platformDomainService;
+        this.platformDnsRecordService = platformDnsRecordService;
     }
 
     /**
@@ -133,6 +137,40 @@ public class PlatformDomainController {
         Map<String, Object> body = new HashMap<>();
         body.put("expiresAt", expiresAt);
         return ResponseEntity.ok(body);
+    }
+
+    /**
+     * Admin endpoint — list TXT records of a platform domain (root domain).
+     */
+    @PreAuthorize("hasRole('ADMIN')")
+    @GetMapping("/admin/platform-domains/{id}/txt")
+    public ResponseEntity<List<PlatformDnsRecordService.TxtRecord>> listTxtRecords(@PathVariable Long id) {
+        String zoneName = platformDomainService.getById(id).getNameUnicode();
+        return ResponseEntity.ok(platformDnsRecordService.listTxtRecords(zoneName));
+    }
+
+    /**
+     * Admin endpoint — add a TXT record to a platform domain.
+     */
+    @PreAuthorize("hasRole('ADMIN')")
+    @PostMapping("/admin/platform-domains/{id}/txt")
+    public ResponseEntity<Map<String, String>> addTxtRecord(@PathVariable Long id,
+                                                            @RequestBody Map<String, String> body) {
+        String zoneName = platformDomainService.getById(id).getNameUnicode();
+        platformDnsRecordService.addTxtRecord(zoneName, body.get("name"), body.get("content"));
+        return ResponseEntity.ok(Map.of("message", "TXT 레코드가 추가되었습니다."));
+    }
+
+    /**
+     * Admin endpoint — delete a TXT record from a platform domain.
+     */
+    @PreAuthorize("hasRole('ADMIN')")
+    @DeleteMapping("/admin/platform-domains/{id}/txt")
+    public ResponseEntity<Map<String, String>> deleteTxtRecord(@PathVariable Long id,
+                                                               @RequestBody Map<String, String> body) {
+        String zoneName = platformDomainService.getById(id).getNameUnicode();
+        platformDnsRecordService.deleteTxtRecord(zoneName, body.get("name"));
+        return ResponseEntity.ok(Map.of("message", "TXT 레코드가 삭제되었습니다."));
     }
 
     /**
