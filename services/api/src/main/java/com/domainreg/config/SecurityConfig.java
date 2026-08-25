@@ -52,6 +52,7 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.GET, "/api/terms/**").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/public/**").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/ads/placements").permitAll()
+                .requestMatchers(HttpMethod.GET, "/api/board/posts").permitAll()
                 // 정적 리소스(프론트 빌드 결과물)는 인증 없이 제공
                 .requestMatchers("/", "/index.html", "/favicon.svg", "/assets/**").permitAll()
                 .anyRequest().authenticated()

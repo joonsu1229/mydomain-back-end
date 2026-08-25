@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.domainreg.persistence.mapper.CommentMapper">
+
+    <resultMap id="CommentMap" type="com.domainreg.core.entity.Comment">
+        <id property="id" column="id"/>
+        <result property="postId" column="post_id"/>
+        <result property="parentId" column="parent_id"/>
+        <result property="userId" column="user_id"/>
+        <result property="authorName" column="author_name"/>
+        <result property="content" column="content"/>
+        <result property="createdAt" column="created_at"/>
+        <result property="updatedAt" column="updated_at"/>
+    </resultMap>
+
+    <select id="findByPostId" resultMap="CommentMap">
+        SELECT * FROM comments WHERE post_id = #{postId}
+        ORDER BY created_at
+    </select>
+
+    <select id="findById" resultMap="CommentMap">
+        SELECT * FROM comments WHERE id = #{id}
+    </select>
+
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO comments (post_id, parent_id, user_id, author_name, content)
+        VALUES (#{postId}, #{parentId}, #{userId}, #{authorName}, #{content})
+    </insert>
+
+    <update id="update">
+        UPDATE comments SET content = #{content}, updated_at = NOW()
+        WHERE id = #{id}
+    </update>
+
+    <delete id="delete">
+        DELETE FROM comments WHERE id = #{id}
+    </delete>
+
+</mapper>

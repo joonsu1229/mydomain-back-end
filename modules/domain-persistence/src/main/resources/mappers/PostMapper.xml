@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.domainreg.persistence.mapper.PostMapper">
+
+    <resultMap id="PostMap" type="com.domainreg.core.entity.Post">
+        <id property="id" column="id"/>
+        <result property="userId" column="user_id"/>
+        <result property="authorName" column="author_name"/>
+        <result property="passwordHash" column="password_hash"/>
+        <result property="title" column="title"/>
+        <result property="content" column="content"/>
+        <result property="isNotice" column="is_notice"/>
+        <result property="isSecret" column="is_secret"/>
+        <result property="isHidden" column="is_hidden"/>
+        <result property="viewCount" column="view_count"/>
+        <result property="commentCount" column="comment_count"/>
+        <result property="createdAt" column="created_at"/>
+        <result property="updatedAt" column="updated_at"/>
+    </resultMap>
+
+    <!-- 목록: content/password_hash는 내려보내지 않음(비밀글 내용 노출 방지) -->
+    <select id="findAll" resultMap="PostMap">
+        SELECT p.id, p.user_id, p.author_name, p.title,
+               p.is_notice, p.is_secret, p.is_hidden, p.view_count,
+               p.created_at, p.updated_at,
+               (SELECT COUNT(*) FROM comments c WHERE c.post_id = p.id) AS comment_count
+        FROM posts p
+        <where>
+            <if test="!includeHidden">p.is_hidden = FALSE</if>
+        </where>
+        ORDER BY p.is_notice DESC, p.created_at DESC
+    </select>
+
+    <select id="findById" resultMap="PostMap">
+        SELECT p.*,
+               (SELECT COUNT(*) FROM comments c WHERE c.post_id = p.id) AS comment_count
+        FROM posts p
+        WHERE p.id = #{id}
+    </select>
+
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO posts (user_id, author_name, password_hash, title, content, is_notice, is_secret)
+        VALUES (#{userId}, #{authorName}, #{passwordHash}, #{title}, #{content}, #{isNotice}, #{isSecret})
+    </insert>
+
+    <update id="update">
+        UPDATE posts SET
+            title = #{title},
+            content = #{content},
+            is_notice = #{isNotice},
+            is_secret = #{isSecret},
+            is_hidden = #{isHidden},
+            password_hash = #{passwordHash},
+            updated_at = NOW()
+        WHERE id = #{id}
+    </update>
+
+    <delete id="delete">
+        DELETE FROM posts WHERE id = #{id}
+    </delete>
+
+    <update id="incrementViewCount">
+        UPDATE posts SET view_count = view_count + 1 WHERE id = #{id}
+    </update>
+
+</mapper>
