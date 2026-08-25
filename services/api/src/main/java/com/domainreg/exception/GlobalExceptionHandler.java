@@ -7,6 +7,7 @@ import com.domainreg.service.PaymentService.PaymentException;
 import com.domainreg.service.PlatformDomainService.PlatformDomainException;
 import com.domainreg.service.BoardService.BoardException;
 import com.domainreg.service.TermsService.TermsException;
+import com.domainreg.service.BlocklistService.BlocklistException;
 import com.domainreg.core.service.PaidGateEnforcer.PaymentRequiredException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -81,6 +82,20 @@ public class GlobalExceptionHandler {
             case "FORBIDDEN", "INVALID_PASSWORD" -> HttpStatus.FORBIDDEN;
             default -> HttpStatus.BAD_REQUEST;
         };
+        return ResponseEntity.status(status)
+            .body(new ErrorResponse(e.getCode(), e.getMessage()));
+    }
+
+    @ExceptionHandler(SecurityPolicyException.class)
+    public ResponseEntity<ErrorResponse> handleSecurityPolicy(SecurityPolicyException e) {
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+            .body(new ErrorResponse(e.getCode(), e.getMessage()));
+    }
+
+    @ExceptionHandler(BlocklistException.class)
+    public ResponseEntity<ErrorResponse> handleBlocklist(BlocklistException e) {
+        HttpStatus status = "NOT_FOUND".equals(e.getCode())
+            ? HttpStatus.NOT_FOUND : HttpStatus.BAD_REQUEST;
         return ResponseEntity.status(status)
             .body(new ErrorResponse(e.getCode(), e.getMessage()));
     }

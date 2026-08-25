@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.domainreg.persistence.mapper.ThreatIocMapper">
+
+    <resultMap id="ThreatIocMap" type="com.domainreg.core.entity.ThreatIoc">
+        <id property="id" column="id"/>
+        <result property="iocType" column="ioc_type"/>
+        <result property="iocValue" column="ioc_value"/>
+        <result property="source" column="source"/>
+        <result property="firstSeen" column="first_seen"/>
+        <result property="lastSeen" column="last_seen"/>
+        <result property="createdAt" column="created_at"/>
+    </resultMap>
+
+    <select id="findByValue" resultMap="ThreatIocMap">
+        SELECT * FROM threat_iocs WHERE ioc_value = #{value} LIMIT 1
+    </select>
+
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO threat_iocs (ioc_type, ioc_value, source)
+        VALUES (#{iocType}, #{iocValue}, #{source})
+    </insert>
+
+    <insert id="upsert">
+        INSERT INTO threat_iocs (ioc_type, ioc_value, source)
+        VALUES (#{iocType}, #{iocValue}, #{source})
+        ON CONFLICT (source, ioc_value)
+        DO UPDATE SET last_seen = NOW()
+    </insert>
+
+    <delete id="deleteBySource">
+        DELETE FROM threat_iocs WHERE source = #{source}
+    </delete>
+
+    <select id="countBySource" resultType="int">
+        SELECT COUNT(*) FROM threat_iocs WHERE source = #{source}
+    </select>
+
+</mapper>

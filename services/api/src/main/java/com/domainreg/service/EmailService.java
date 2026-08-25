@@ -6,27 +6,28 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.StringRedisTemplate;
-import org.springframework.mail.javamail.JavaMailSender;
+import org.springframework.mail.javamail.JavaMailSenderImpl;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
 
 import java.time.Duration;
+import java.util.Properties;
 
+/**
+ * SMTP 설정을 관리자 페이지(DB, {@link AppSettingsService})에서 읽어 이메일을 발송한다.
+ */
 @Service
 public class EmailService {
 
     private static final Logger log = LoggerFactory.getLogger(EmailService.class);
     private final StringRedisTemplate redis;
-    private final JavaMailSender mailSender;
-    private final String fromAddress;
+    private final AppSettingsService settings;
     private final String webBaseUrl;
 
-    public EmailService(StringRedisTemplate redis, JavaMailSender mailSender,
-                        @Value("${app.mail.from:}") String fromAddress,
+    public EmailService(StringRedisTemplate redis, AppSettingsService settings,
                         @Value("${app.web-base-url:https://mydomain.rog.kr}") String webBaseUrl) {
         this.redis = redis;
-        this.mailSender = mailSender;
-        this.fromAddress = fromAddress;
+        this.settings = settings;
         this.webBaseUrl = webBaseUrl;
     }
 
@@ -57,13 +58,14 @@ public class EmailService {
         redis.opsForValue().set("reset_token:" + token, email, Duration.ofMinutes(15));
 
         try {
-            MimeMessage message = mailSender.createMimeMessage();
+            JavaMailSenderImpl sender = buildMailSender();
+            MimeMessage message = sender.createMimeMessage();
             MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
             helper.setTo(email);
             helper.setSubject(subject);
             helper.setText(body, true);
-            helper.setFrom(fromAddress);
-            mailSender.send(message);
+            helper.setFrom(fromAddress());
+            sender.send(message);
             log.info("Password reset email sent to: {}", email);
         } catch (MessagingException e) {
             log.error("Failed to send password reset email to {}: {}", email, e.getMessage());
@@ -97,19 +99,43 @@ public class EmailService {
         redis.opsForValue().set("verify_token:" + token, email, Duration.ofHours(24));
 
         try {
-            MimeMessage message = mailSender.createMimeMessage();
+            JavaMailSenderImpl sender = buildMailSender();
+            MimeMessage message = sender.createMimeMessage();
             MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
             helper.setTo(email);
             helper.setSubject(subject);
             helper.setText(body, true); // true = HTML
-            helper.setFrom(fromAddress);
+            helper.setFrom(fromAddress());
 
-            mailSender.send(message);
+            sender.send(message);
             log.info("Verification email sent to: {}", email);
         } catch (MessagingException e) {
             log.error("Failed to send verification email to {}: {}", email, e.getMessage());
             // Fallback: log the link so user can still verify via Redis
             log.info("Verification link (fallback): {}", verifyUrl);
         }
+    }
+
+    private JavaMailSenderImpl buildMailSender() {
+        JavaMailSenderImpl sender = new JavaMailSenderImpl();
+        sender.setHost(settings.getOrDefault("smtp.host", "smtp.naver.com"));
+        String port = settings.getOrDefault("smtp.port", "587");
+        try {
+            sender.setPort(Integer.parseInt(port.trim()));
+        } catch (NumberFormatException e) {
+            sender.setPort(587);
+        }
+        sender.setUsername(settings.getOrDefault("smtp.username", ""));
+        sender.setPassword(settings.getOrDefault("smtp.password", ""));
+        Properties props = sender.getJavaMailProperties();
+        props.put("mail.smtp.auth", "true");
+        props.put("mail.smtp.starttls.enable", "true");
+        props.put("mail.smtp.starttls.required", "true");
+        return sender;
+    }
+
+    private String fromAddress() {
+        String from = settings.getOrDefault("smtp.from", "");
+        return from.isBlank() ? "no-reply@mydomain.rog.kr" : from;
     }
 }

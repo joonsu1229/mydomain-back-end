@@ -6,6 +6,7 @@ import com.domainreg.core.entity.RegistrarJob;
 import com.domainreg.core.enums.JobType;
 import com.domainreg.core.port.DomainRepository;
 import com.domainreg.core.port.RegistrarJobRepository;
+import com.domainreg.exception.SecurityPolicyException;
 import com.domainreg.persistence.mapper.DnsRecordMapper;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -16,18 +17,21 @@ import java.util.Set;
 @Service
 public class DnsRecordService {
 
-    private static final Set<String> VALID_TYPES = Set.of("A","AAAA","CNAME","MX","TXT","NS","SRV");
+    private static final Set<String> VALID_TYPES = Set.of("A","AAAA","CNAME","MX","TXT");
 
     private final DnsRecordMapper mapper;
     private final DomainRepository domainRepository;
     private final RegistrarJobRepository jobRepository;
+    private final SecurityPolicyService securityPolicyService;
 
     public DnsRecordService(DnsRecordMapper mapper,
                             DomainRepository domainRepository,
-                            RegistrarJobRepository jobRepository) {
+                            RegistrarJobRepository jobRepository,
+                            SecurityPolicyService securityPolicyService) {
         this.mapper = mapper;
         this.domainRepository = domainRepository;
         this.jobRepository = jobRepository;
+        this.securityPolicyService = securityPolicyService;
     }
 
     public List<DnsRecord> getRecords(Long userId, Long domainId) {
@@ -39,10 +43,12 @@ public class DnsRecordService {
     public DnsRecord addRecord(Long userId, Long domainId, String type, String name,
                                 String content, int ttl, Integer priority) {
         verifyOwnership(userId, domainId);
-        if (!VALID_TYPES.contains(type.toUpperCase())) {
-            throw new IllegalArgumentException("Invalid record type: " + type);
+        String upper = type == null ? "" : type.toUpperCase();
+        if (!VALID_TYPES.contains(upper)) {
+            throw new SecurityPolicyException("INVALID_TYPE", "지원하지 않는 레코드 타입입니다: " + type);
         }
-        DnsRecord r = DnsRecord.create(domainId, type, name, content, ttl, priority);
+        securityPolicyService.validateRecord(upper, name, content, ttl, priority);
+        DnsRecord r = DnsRecord.create(domainId, upper, name, content, ttl, priority);
         mapper.insert(r);
         enqueueSyncJob(domainId);
         return r;
@@ -57,7 +63,12 @@ public class DnsRecordService {
         if (!r.getDomainId().equals(domainId)) {
             throw new IllegalArgumentException("Record does not belong to domain");
         }
-        r.setRecordType(type.toUpperCase());
+        String upper = type == null ? "" : type.toUpperCase();
+        if (!VALID_TYPES.contains(upper)) {
+            throw new SecurityPolicyException("INVALID_TYPE", "지원하지 않는 레코드 타입입니다: " + type);
+        }
+        securityPolicyService.validateRecord(upper, name, content, ttl, priority);
+        r.setRecordType(upper);
         r.setName(name);
         r.setContent(content);
         r.setTtl(ttl);

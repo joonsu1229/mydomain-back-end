@@ -26,16 +26,6 @@ spring:
       write-dates-as-timestamps: false
     default-property-inclusion: non_null
 
-  mail:
-    host: smtp.naver.com
-    port: 587
-    username: ${SMTP_USERNAME:}
-    password: ${SMTP_PASSWORD:}
-    properties:
-      mail.smtp.auth: true
-      mail.smtp.starttls.enable: true
-      mail.smtp.starttls.required: true
-
 mybatis:
   mapper-locations: classpath:mappers/**/*.xml
   type-aliases-package: com.domainreg.core.entity
@@ -50,8 +40,6 @@ logging:
     org.mybatis: INFO
 
 app:
-  mail:
-    from: ${SMTP_FROM:}
   web-base-url: ${APP_WEB_BASE_URL:https://mydomain.rog.kr}
   jwt:
     secret: ${JWT_SECRET:change-me-in-production-minimum-256-bits}
@@ -66,6 +54,10 @@ app:
   powerdns:
     base-url: ${POWERDNS_BASE_URL:http://127.0.0.1:8081}
     api-key: ${POWERDNS_API_KEY:}
+  security:
+    keyword-filter-enabled: ${KEYWORD_FILTER_ENABLED:true}
+    dnsbl-enabled: ${DNSBL_ENABLED:true}
+    dnsbl-zones: ${DNSBL_ZONES:zen.spamhaus.org}
   payment:
     mode: ${PAYMENT_MODE:stub}
     toss:

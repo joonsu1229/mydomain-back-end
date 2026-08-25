@@ -25,17 +25,20 @@ public class OrderService {
     private final PlatformDomainRepository platformDomainRepository;
     private final UserRepository userRepository;
     private final StringRedisTemplate redis;
+    private final SecurityPolicyService securityPolicyService;
 
     public OrderService(DomainRepository domainRepository,
                         OrderRepository orderRepository,
                         PlatformDomainRepository platformDomainRepository,
                         UserRepository userRepository,
-                        StringRedisTemplate redis) {
+                        StringRedisTemplate redis,
+                        SecurityPolicyService securityPolicyService) {
         this.domainRepository = domainRepository;
         this.orderRepository = orderRepository;
         this.platformDomainRepository = platformDomainRepository;
         this.userRepository = userRepository;
         this.redis = redis;
+        this.securityPolicyService = securityPolicyService;
     }
 
     /**
@@ -50,6 +53,9 @@ public class OrderService {
             throw new OrderException("INVALID_PREFIX",
                 "서브도메인은 영문 소문자, 숫자, 하이픈만 사용할 수 있습니다.");
         }
+
+        // 사전 차단: 예약어/금지어 키워드 검사
+        securityPolicyService.validateDomainName(trimmedPrefix);
 
         // Load platform domain
         PlatformDomain pd = platformDomainRepository.findById(platformDomainId)
