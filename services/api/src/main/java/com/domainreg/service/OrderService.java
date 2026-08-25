@@ -65,7 +65,7 @@ public class OrderService {
         int currentCount = domainRepository.findByUserId(userId).size();
         if (currentCount >= limit) {
             throw new OrderException("DOMAIN_LIMIT_EXCEEDED",
-                "도메인 발급 한도(" + limit + "개)를 초과했습니다. 관리자에게 문의하세요.");
+                "최대 " + limit + "개까지만 발급이 가능합니다. 발급 한도를 늘리려면 관리자에게 문의해주세요.");
         }
 
         // Build full domain name
