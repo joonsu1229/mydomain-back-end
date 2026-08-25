@@ -61,12 +61,12 @@ public class AdminController {
         return ResponseEntity.ok(Map.of("message", "권한이 변경되었습니다."));
     }
 
-    @PutMapping("/users/{id}/password")
-    public ResponseEntity<Map<String, String>> changePassword(
+    @PutMapping("/users/{id}/account")
+    public ResponseEntity<Map<String, String>> updateUserAccount(
             @PathVariable Long id,
             @RequestBody Map<String, String> body) {
-        adminService.changePassword(id, body.get("password"));
-        return ResponseEntity.ok(Map.of("message", "비밀번호가 변경되었습니다."));
+        adminService.updateUserAccount(id, body.get("email"), body.get("password"));
+        return ResponseEntity.ok(Map.of("message", "계정 정보가 변경되었습니다."));
     }
 
     @PutMapping("/users/{id}/suspend")

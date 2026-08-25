@@ -118,6 +118,13 @@
         WHERE id = #{id}
     </update>
 
+    <update id="updateEmail">
+        UPDATE users SET
+            email = #{email},
+            updated_at = NOW()
+        WHERE id = #{id}
+    </update>
+
     <update id="updatePermissions">
         UPDATE users SET ns_enabled = #{nsEnabled}, privacy_enabled = #{privacyEnabled}, updated_at = NOW()
         WHERE id = #{id}

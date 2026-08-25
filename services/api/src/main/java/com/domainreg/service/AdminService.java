@@ -127,15 +127,38 @@ public class AdminService {
         userMapper.updatePermissions(userId, nsEnabled, privacyEnabled);
     }
 
-    public void changePassword(Long userId, String newPassword) {
-        if (newPassword == null || newPassword.length() < 8) {
-            throw new IllegalArgumentException("비밀번호는 최소 8자 이상이어야 합니다.");
-        }
-        userRepository.findById(userId)
+    public void updateUserAccount(Long userId, String email, String password) {
+        User user = userRepository.findById(userId)
             .orElseThrow(() -> new IllegalArgumentException("User not found"));
-        userMapper.updatePassword(userId, passwordEncoder.encode(newPassword));
-        // Invalidate refresh tokens so the user must re-login
-        redis.delete("refresh:" + userId);
+
+        boolean changed = false;
+
+        // 이메일: 값이 있을 때만 변경
+        if (email != null && !email.isBlank()) {
+            String newEmail = email.trim();
+            if (!newEmail.equals(user.getEmail())) {
+                if (userMapper.existsByEmail(newEmail)) {
+                    throw new IllegalArgumentException("이미 사용 중인 이메일입니다.");
+                }
+                userMapper.updateEmail(userId, newEmail);
+                changed = true;
+            }
+        }
+
+        // 비밀번호: 값이 있을 때만 변경
+        if (password != null && !password.isBlank()) {
+            if (password.length() < 8) {
+                throw new IllegalArgumentException("비밀번호는 최소 8자 이상이어야 합니다.");
+            }
+            userMapper.updatePassword(userId, passwordEncoder.encode(password));
+            // Invalidate refresh tokens so the user must re-login
+            redis.delete("refresh:" + userId);
+            changed = true;
+        }
+
+        if (!changed) {
+            throw new IllegalArgumentException("변경할 이메일 또는 비밀번호를 입력해주세요.");
+        }
     }
 
     public void suspendUser(Long userId, boolean suspended) {
