@@ -148,16 +148,19 @@ public class BoardService {
         return commentRepository.save(c);
     }
 
-    /** 글 삭제 — 회원 삭제는 숨김(use_yn=N), 관리자 삭제는 영구삭제(cascade). */
+    /** 글 삭제 — 누구든(회원/관리자) 소프트 삭제(use_yn=N). 영구삭제는 관리자 전용 별도 메서드. */
     @Transactional
     public void deletePost(Long id, UserPrincipal principal) {
         Post p = requirePost(id);
         requirePostOwnerOrAdmin(p, principal);
-        if (isAdmin(principal)) {
-            postRepository.deleteById(id);
-        } else {
-            postRepository.softDelete(id);
-        }
+        postRepository.softDelete(id);
+    }
+
+    /** 관리자: 영구삭제(댓글 cascade). */
+    @Transactional
+    public void permanentDeletePost(Long id) {
+        requirePost(id);
+        postRepository.deleteById(id);
     }
 
     /** 댓글 삭제(작성자/관리자) — 대댓글은 cascade. */

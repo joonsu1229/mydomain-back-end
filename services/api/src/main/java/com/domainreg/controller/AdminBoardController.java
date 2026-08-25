@@ -32,6 +32,13 @@ public class AdminBoardController {
         return ResponseEntity.ok(boardService.restorePost(id));
     }
 
+    /** 영구삭제. */
+    @DeleteMapping("/posts/{id}")
+    public ResponseEntity<Map<String, String>> permanentDelete(@PathVariable Long id) {
+        boardService.permanentDeletePost(id);
+        return ResponseEntity.ok(Map.of("message", "영구 삭제되었습니다."));
+    }
+
     /** 비공개 처리 토글. */
     @PutMapping("/posts/{id}/hide")
     public ResponseEntity<Post> hide(@PathVariable Long id, @RequestBody Map<String, String> body) {
