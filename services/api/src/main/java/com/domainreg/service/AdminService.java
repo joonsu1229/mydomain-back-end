@@ -6,6 +6,7 @@ import com.domainreg.core.entity.RegistrarJob;
 import com.domainreg.core.entity.User;
 import com.domainreg.core.port.DomainRepository;
 import com.domainreg.core.port.UserRepository;
+import com.domainreg.persistence.mapper.DnsRecordMapper;
 import com.domainreg.persistence.mapper.DomainMapper;
 import com.domainreg.persistence.mapper.RegistrarJobMapper;
 import com.domainreg.persistence.mapper.UserMapper;
@@ -26,6 +27,7 @@ public class AdminService {
     private final UserRepository userRepository;
     private final DomainRepository domainRepository;
     private final DomainMapper domainMapper;
+    private final DnsRecordMapper dnsRecordMapper;
     private final UserMapper userMapper;
     private final RegistrarJobMapper registrarJobMapper;
     private final PlatformDomainService platformDomainService;
@@ -36,6 +38,7 @@ public class AdminService {
     public AdminService(UserRepository userRepository,
                         DomainRepository domainRepository,
                         DomainMapper domainMapper,
+                        DnsRecordMapper dnsRecordMapper,
                         UserMapper userMapper,
                         RegistrarJobMapper registrarJobMapper,
                         PlatformDomainService platformDomainService,
@@ -45,6 +48,7 @@ public class AdminService {
         this.userRepository = userRepository;
         this.domainRepository = domainRepository;
         this.domainMapper = domainMapper;
+        this.dnsRecordMapper = dnsRecordMapper;
         this.userMapper = userMapper;
         this.registrarJobMapper = registrarJobMapper;
         this.platformDomainService = platformDomainService;
@@ -99,6 +103,7 @@ public class AdminService {
         result.put("lastError", latest != null ? latest.getLastError() : null);
         result.put("jobStatus", latest != null ? latest.getStatus().name() : null);
         result.put("jobType", latest != null ? latest.getJobType().name() : null);
+        result.put("records", dnsRecordMapper.findByDomainId(domainId));
         return result;
     }
 

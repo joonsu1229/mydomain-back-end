@@ -230,10 +230,12 @@ public class RedisAdminService {
             deleted ? "인증 토큰이 만료되었습니다." : "해당 인증 토큰을 찾을 수 없습니다.");
     }
 
-    public Map<String, Object> resendVerificationEmail(String email) {
-        Optional<User> userOpt = userMapper.findByEmail(email);
+    public Map<String, Object> resendVerificationEmail(String fullToken) {
+        // Redis의 이메일은 가입 시점 값이라 변경 후에도 옛 주소가 남아 있을 수 있다.
+        // 따라서 토큰 기준으로 DB에서 사용자를 찾아 "현재 이메일"로 재발송한다.
+        Optional<User> userOpt = userMapper.findByVerificationToken(fullToken);
         if (userOpt.isEmpty()) {
-            return Map.of("resent", false, "message", "해당 이메일로 등록된 사용자를 찾을 수 없습니다.");
+            return Map.of("resent", false, "message", "해당 인증 토큰에 해당하는 사용자를 찾을 수 없습니다.");
         }
         User user = userOpt.get();
 
@@ -241,18 +243,15 @@ public class RedisAdminService {
             return Map.of("resent", false, "message", "이미 인증이 완료된 계정입니다.");
         }
 
-        String oldToken = user.getVerificationToken();
         String newToken = UUID.randomUUID().toString().replace("-", "");
 
         // DB의 인증 토큰을 새 토큰으로 교체
         userMapper.updateVerificationToken(user.getId(), newToken);
 
         // 기존 Redis verify 토큰 제거 (새 키는 sendVerificationEmail 내부에서 생성)
-        if (oldToken != null && !oldToken.isBlank()) {
-            redis.delete("verify_token:" + oldToken);
-        }
+        redis.delete("verify_token:" + fullToken);
 
-        // 인증 메일 재발송
+        // 변경된(현재) 이메일로 인증 메일 재발송
         emailService.sendVerificationEmail(user.getEmail(), user.getName(), newToken);
 
         return Map.of("resent", true, "message", user.getEmail() + " 인증 메일을 재발송했습니다.");

@@ -69,11 +69,11 @@ public class RedisAdminController {
     // ── Resend verification email ──
     @PostMapping("/redis/verify/resend")
     public ResponseEntity<Map<String, Object>> resendVerificationEmail(@RequestBody Map<String, String> body) {
-        String email = body.get("email");
-        if (email == null || email.isBlank()) {
-            return ResponseEntity.badRequest().body(Map.of("resent", false, "message", "이메일을 입력해주세요."));
+        String fullToken = body.get("fullToken");
+        if (fullToken == null || fullToken.isBlank()) {
+            return ResponseEntity.badRequest().body(Map.of("resent", false, "message", "인증 토큰을 입력해주세요."));
         }
-        return ResponseEntity.ok(redisAdminService.resendVerificationEmail(email));
+        return ResponseEntity.ok(redisAdminService.resendVerificationEmail(fullToken));
     }
 
     // ── Existing: clear rate limits ──
