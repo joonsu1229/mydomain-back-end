@@ -6,6 +6,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 import java.util.Map;
 
 @RestController
@@ -17,6 +18,18 @@ public class AdminBoardController {
 
     public AdminBoardController(BoardService boardService) {
         this.boardService = boardService;
+    }
+
+    /** 전체 게시글 목록(삭제 포함) — 관리자 전용. */
+    @GetMapping("/posts")
+    public ResponseEntity<List<Post>> posts() {
+        return ResponseEntity.ok(boardService.getAllPostsForAdmin());
+    }
+
+    /** 삭제된 글 복원. */
+    @PutMapping("/posts/{id}/restore")
+    public ResponseEntity<Post> restore(@PathVariable Long id) {
+        return ResponseEntity.ok(boardService.restorePost(id));
     }
 
     /** 비공개 처리 토글. */

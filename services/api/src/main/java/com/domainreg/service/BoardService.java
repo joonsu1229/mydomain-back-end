@@ -39,10 +39,15 @@ public class BoardService {
         return postRepository.findAll(isAdmin(principal));
     }
 
+    /** 관리자: 전체 게시글 목록(삭제 포함, 본문 포함). */
+    public List<Post> getAllPostsForAdmin() {
+        return postRepository.findAllAdmin();
+    }
+
     /** 상세(로그인 필수) — 조회수 증가 + 비밀글/비공개 처리. */
     @Transactional
     public Post getPost(Long id, UserPrincipal principal) {
-        Post p = requirePost(id);
+        Post p = requireActivePost(id);
         if (p.isHidden() && !isAdmin(principal)) {
             throw new BoardException("NOT_FOUND", "게시글을 찾을 수 없습니다.");
         }
@@ -76,7 +81,7 @@ public class BoardService {
 
     /** 비밀글 비밀번호 확인(로그인 필수) — 맞으면 본문 반환. */
     public Post verifyPassword(Long id, String password) {
-        Post p = requirePost(id);
+        Post p = requireActivePost(id);
         if (!p.isSecret()) {
             return p;
         }
@@ -90,7 +95,7 @@ public class BoardService {
     /** 글 수정(작성자/관리자). */
     @Transactional
     public Post updatePost(Long id, UpdatePostRequest req, UserPrincipal principal) {
-        Post p = requirePost(id);
+        Post p = requireActivePost(id);
         requirePostOwnerOrAdmin(p, principal);
         p.setTitle(req.title().trim());
         p.setContent(req.content());
@@ -116,7 +121,7 @@ public class BoardService {
     /** 댓글 작성(로그인 필수, 1단계 대댓글). */
     @Transactional
     public Comment createComment(Long postId, CreateCommentRequest req, UserPrincipal principal) {
-        Post p = requirePost(postId);
+        Post p = requireActivePost(postId);
         if (p.isHidden() && !isAdmin(principal)) {
             throw new BoardException("NOT_FOUND", "게시글을 찾을 수 없습니다.");
         }
@@ -143,12 +148,16 @@ public class BoardService {
         return commentRepository.save(c);
     }
 
-    /** 글 삭제(작성자/관리자) — 댓글은 cascade. */
+    /** 글 삭제 — 회원 삭제는 숨김(use_yn=N), 관리자 삭제는 영구삭제(cascade). */
     @Transactional
     public void deletePost(Long id, UserPrincipal principal) {
         Post p = requirePost(id);
         requirePostOwnerOrAdmin(p, principal);
-        postRepository.deleteById(id);
+        if (isAdmin(principal)) {
+            postRepository.deleteById(id);
+        } else {
+            postRepository.softDelete(id);
+        }
     }
 
     /** 댓글 삭제(작성자/관리자) — 대댓글은 cascade. */
@@ -162,7 +171,7 @@ public class BoardService {
     /** 관리자: 비공개 처리 토글. */
     @Transactional
     public Post setHidden(Long id, boolean hidden) {
-        Post p = requirePost(id);
+        Post p = requireActivePost(id);
         p.setHidden(hidden);
         return postRepository.save(p);
     }
@@ -170,14 +179,32 @@ public class BoardService {
     /** 관리자: 공지사항 토글. */
     @Transactional
     public Post setNotice(Long id, boolean notice) {
-        Post p = requirePost(id);
+        Post p = requireActivePost(id);
         p.setNotice(notice);
         return postRepository.save(p);
+    }
+
+    /** 관리자: 삭제된 글 복원. */
+    @Transactional
+    public Post restorePost(Long id) {
+        Post p = requirePost(id);
+        postRepository.restore(id);
+        p.setUseYn("Y");
+        return p;
     }
 
     private Post requirePost(Long id) {
         return postRepository.findById(id)
             .orElseThrow(() -> new BoardException("NOT_FOUND", "게시글을 찾을 수 없습니다."));
+    }
+
+    /** 삭제되지 않은(활성) 글만 반환 — 삭제된 글은 존재하지 않는 것처럼 처리. */
+    private Post requireActivePost(Long id) {
+        Post p = requirePost(id);
+        if (!"Y".equals(p.getUseYn())) {
+            throw new BoardException("NOT_FOUND", "게시글을 찾을 수 없습니다.");
+        }
+        return p;
     }
 
     private Comment requireComment(Long id) {

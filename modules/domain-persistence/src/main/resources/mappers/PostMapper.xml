@@ -14,6 +14,7 @@
         <result property="isNotice" column="is_notice"/>
         <result property="isSecret" column="is_secret"/>
         <result property="isHidden" column="is_hidden"/>
+        <result property="useYn" column="use_yn"/>
         <result property="viewCount" column="view_count"/>
         <result property="commentCount" column="comment_count"/>
         <result property="createdAt" column="created_at"/>
@@ -24,16 +25,27 @@
          작성자 검색(이름/아이디)을 위해 login_id를 조인하되, 익명 글은 아이디를 노출하지 않음. -->
     <select id="findAll" resultMap="PostMap">
         SELECT p.id, p.user_id, p.author_name, p.title,
-               p.is_notice, p.is_secret, p.is_hidden, p.view_count,
+               p.is_notice, p.is_secret, p.is_hidden, p.view_count, p.use_yn,
                p.created_at, p.updated_at,
                (SELECT COUNT(*) FROM comments c WHERE c.post_id = p.id) AS comment_count,
                CASE WHEN p.author_name = '익명' THEN NULL ELSE u.login_id END AS login_id
         FROM posts p
         LEFT JOIN users u ON u.id = p.user_id
-        <where>
-            <if test="!includeHidden">p.is_hidden = FALSE</if>
-        </where>
+        WHERE p.use_yn = 'Y'
+        <if test="!includeHidden">AND p.is_hidden = FALSE</if>
         ORDER BY p.is_notice DESC, p.created_at DESC
+    </select>
+
+    <!-- 관리자용 전체 목록(삭제 포함) — 본문까지 포함해 삭제된 글 열람 가능. -->
+    <select id="findAllAdmin" resultMap="PostMap">
+        SELECT p.id, p.user_id, p.author_name, p.title, p.content,
+               p.is_notice, p.is_secret, p.is_hidden, p.view_count, p.use_yn,
+               p.created_at, p.updated_at,
+               (SELECT COUNT(*) FROM comments c WHERE c.post_id = p.id) AS comment_count,
+               CASE WHEN p.author_name = '익명' THEN NULL ELSE u.login_id END AS login_id
+        FROM posts p
+        LEFT JOIN users u ON u.id = p.user_id
+        ORDER BY p.use_yn DESC, p.is_notice DESC, p.created_at DESC
     </select>
 
     <select id="findById" resultMap="PostMap">
@@ -58,6 +70,14 @@
             password_hash = #{passwordHash},
             updated_at = NOW()
         WHERE id = #{id}
+    </update>
+
+    <update id="softDelete">
+        UPDATE posts SET use_yn = 'N', updated_at = NOW() WHERE id = #{id}
+    </update>
+
+    <update id="restore">
+        UPDATE posts SET use_yn = 'Y', updated_at = NOW() WHERE id = #{id}
     </update>
 
     <delete id="delete">

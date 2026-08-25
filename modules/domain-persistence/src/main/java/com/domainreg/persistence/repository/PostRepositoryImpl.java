@@ -23,6 +23,11 @@ public class PostRepositoryImpl implements PostRepository {
     }
 
     @Override
+    public List<Post> findAllAdmin() {
+        return mapper.findAllAdmin();
+    }
+
+    @Override
     public Optional<Post> findById(Long id) {
         return mapper.findById(id);
     }
@@ -35,6 +40,16 @@ public class PostRepositoryImpl implements PostRepository {
             mapper.update(post);
         }
         return post;
+    }
+
+    @Override
+    public void softDelete(Long id) {
+        mapper.softDelete(id);
+    }
+
+    @Override
+    public void restore(Long id) {
+        mapper.restore(id);
     }
 
     @Override

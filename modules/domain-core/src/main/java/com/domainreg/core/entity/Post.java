@@ -17,6 +17,7 @@ public class Post {
     private boolean isNotice;
     private boolean isSecret;
     private boolean isHidden;
+    private String useYn = "Y";   // 사용 여부(Y=활성, N=삭제) — 회원 삭제는 N 처리
     private int viewCount;
     private int commentCount;      // 목록 집계
     private Instant createdAt;
@@ -72,6 +73,9 @@ public class Post {
     public boolean isHidden() { return isHidden; }
     @JsonProperty("isHidden")
     public void setHidden(boolean hidden) { this.isHidden = hidden; }
+
+    public String getUseYn() { return useYn; }
+    public void setUseYn(String useYn) { this.useYn = useYn; }
 
     public int getViewCount() { return viewCount; }
     public void setViewCount(int viewCount) { this.viewCount = viewCount; }
