@@ -197,6 +197,10 @@ public class PowerDnsRegistrarClient implements RegistrarClient {
         if ("CNAME".equals(type) || "NS".equals(type)) {
             return fqdn(content);
         }
+        if ("TXT".equals(type)) {
+            // PowerDNS requires TXT content to be quoted ("value"), same as PlatformDnsRecordService.
+            return content.startsWith("\"") ? content : "\"" + content + "\"";
+        }
         return content;
     }
 
