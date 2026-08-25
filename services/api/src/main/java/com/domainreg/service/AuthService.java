@@ -105,6 +105,8 @@ public class AuthService {
         User user = userMapper.findByVerificationToken(token)
             .orElseThrow(() -> new AuthException("INVALID_TOKEN", "유효하지 않은 인증 토큰입니다."));
         userMapper.verifyEmail(user.getId());
+        // 인증 완료 시 Redis의 인증대기 토큰도 제거 (재사용 방지)
+        redis.delete("verify_token:" + token);
         user.setEmailVerified(true);
         user.setVerificationToken(null);
         return user;
