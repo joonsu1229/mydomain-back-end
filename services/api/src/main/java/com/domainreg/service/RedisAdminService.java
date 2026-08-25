@@ -83,8 +83,17 @@ public class RedisAdminService {
         if (verifyKeys != null) {
             for (String key : verifyKeys) {
                 String token = key.substring("verify_token:".length());
-                String email = redis.opsForValue().get(key);
+                String redisEmail = redis.opsForValue().get(key);
                 Long ttl = redis.getExpire(key);
+
+                // Redis 값은 가입 시점 이메일이라 이메일 변경 후에도 옛 주소가 남을 수 있다.
+                // 표시·재발송 기준은 DB의 "현재 이메일"로 한다.
+                String email = redisEmail;
+                Optional<User> userOpt = userMapper.findByVerificationToken(token);
+                if (userOpt.isPresent()) {
+                    email = userOpt.get().getEmail();
+                }
+
                 Map<String, Object> entry = new LinkedHashMap<>();
                 entry.put("token", token.length() > 12 ? token.substring(0, 12) + "..." : token);
                 entry.put("fullToken", token);
