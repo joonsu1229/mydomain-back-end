@@ -28,6 +28,7 @@ public interface UserMapper {
     void unlockAccount(@Param("id") Long id);
     void updatePassword(@Param("id") Long id, @Param("passwordHash") String passwordHash);
     void updateEmail(@Param("id") Long id, @Param("email") String email);
+    void updateDomainLimit(@Param("id") Long id, @Param("domainLimit") int domainLimit);
     void updatePermissions(@Param("id") Long id, @Param("nsEnabled") boolean nsEnabled, @Param("privacyEnabled") boolean privacyEnabled);
     void deletePaymentsByUserId(@Param("id") Long id);
     void deleteOrdersByUserId(@Param("id") Long id);

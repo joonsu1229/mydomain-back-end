@@ -127,6 +127,12 @@ public class AdminService {
         userMapper.updatePermissions(userId, nsEnabled, privacyEnabled);
     }
 
+    public void updateDomainLimit(Long userId, int limit) {
+        userRepository.findById(userId)
+            .orElseThrow(() -> new IllegalArgumentException("User not found"));
+        userMapper.updateDomainLimit(userId, limit);
+    }
+
     public void updateUserAccount(Long userId, String email, String password) {
         User user = userRepository.findById(userId)
             .orElseThrow(() -> new IllegalArgumentException("User not found"));

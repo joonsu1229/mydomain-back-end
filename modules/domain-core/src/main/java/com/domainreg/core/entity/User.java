@@ -12,6 +12,7 @@ public class User {
     private String role;
     private boolean nsEnabled;
     private boolean privacyEnabled;
+    private int domainLimit;
     private boolean emailVerified;
     private String verificationToken;
     private int failedLoginAttempts;
@@ -30,6 +31,7 @@ public class User {
         u.phone = phone;
         u.role = "USER";
         u.emailVerified = false;
+        u.domainLimit = 3;
         return u;
     }
 
@@ -61,6 +63,9 @@ public class User {
 
     public boolean isPrivacyEnabled() { return privacyEnabled; }
     public void setPrivacyEnabled(boolean privacyEnabled) { this.privacyEnabled = privacyEnabled; }
+
+    public int getDomainLimit() { return domainLimit; }
+    public void setDomainLimit(int domainLimit) { this.domainLimit = domainLimit; }
 
     public boolean isEmailVerified() { return emailVerified; }
     public void setEmailVerified(boolean v) { this.emailVerified = v; }

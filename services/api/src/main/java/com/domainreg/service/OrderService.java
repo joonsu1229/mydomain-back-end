@@ -3,10 +3,12 @@ package com.domainreg.service;
 import com.domainreg.core.entity.Domain;
 import com.domainreg.core.entity.Order;
 import com.domainreg.core.entity.PlatformDomain;
+import com.domainreg.core.entity.User;
 import com.domainreg.core.enums.ProductType;
 import com.domainreg.core.port.DomainRepository;
 import com.domainreg.core.port.OrderRepository;
 import com.domainreg.core.port.PlatformDomainRepository;
+import com.domainreg.core.port.UserRepository;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -21,15 +23,18 @@ public class OrderService {
     private final DomainRepository domainRepository;
     private final OrderRepository orderRepository;
     private final PlatformDomainRepository platformDomainRepository;
+    private final UserRepository userRepository;
     private final StringRedisTemplate redis;
 
     public OrderService(DomainRepository domainRepository,
                         OrderRepository orderRepository,
                         PlatformDomainRepository platformDomainRepository,
+                        UserRepository userRepository,
                         StringRedisTemplate redis) {
         this.domainRepository = domainRepository;
         this.orderRepository = orderRepository;
         this.platformDomainRepository = platformDomainRepository;
+        this.userRepository = userRepository;
         this.redis = redis;
     }
 
@@ -51,6 +56,16 @@ public class OrderService {
             .orElseThrow(() -> new OrderException("PLATFORM_NOT_FOUND", "플랫폼 도메인을 찾을 수 없습니다."));
         if (!pd.isActive()) {
             throw new OrderException("PLATFORM_INACTIVE", "현재 사용할 수 없는 플랫폼 도메인입니다.");
+        }
+
+        // 도메인 발급 한도 체크 (기본 3개, 관리자가 사용자별로 변경 가능)
+        User user = userRepository.findById(userId)
+            .orElseThrow(() -> new OrderException("USER_NOT_FOUND", "사용자를 찾을 수 없습니다."));
+        int limit = user.getDomainLimit() > 0 ? user.getDomainLimit() : 3;
+        int currentCount = domainRepository.findByUserId(userId).size();
+        if (currentCount >= limit) {
+            throw new OrderException("DOMAIN_LIMIT_EXCEEDED",
+                "도메인 발급 한도(" + limit + "개)를 초과했습니다. 관리자에게 문의하세요.");
         }
 
         // Build full domain name

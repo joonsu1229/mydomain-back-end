@@ -69,6 +69,18 @@ public class AdminController {
         return ResponseEntity.ok(Map.of("message", "계정 정보가 변경되었습니다."));
     }
 
+    @PutMapping("/users/{id}/domain-limit")
+    public ResponseEntity<Map<String, String>> updateDomainLimit(
+            @PathVariable Long id,
+            @RequestBody Map<String, Integer> body) {
+        Integer limit = body.get("domainLimit");
+        if (limit == null || limit < 1) {
+            return ResponseEntity.badRequest().body(Map.of("message", "유효한 발급 제한 값을 입력해주세요."));
+        }
+        adminService.updateDomainLimit(id, limit);
+        return ResponseEntity.ok(Map.of("message", "도메인 발급 제한이 변경되었습니다."));
+    }
+
     @PutMapping("/users/{id}/suspend")
     public ResponseEntity<Map<String, String>> suspendUser(
             @PathVariable Long id,

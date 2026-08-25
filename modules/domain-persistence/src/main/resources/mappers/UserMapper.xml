@@ -13,6 +13,7 @@
         <result property="role" column="role"/>
         <result property="nsEnabled" column="ns_enabled"/>
         <result property="privacyEnabled" column="privacy_enabled"/>
+        <result property="domainLimit" column="domain_limit"/>
         <result property="emailVerified" column="email_verified"/>
         <result property="verificationToken" column="verification_token"/>
         <result property="failedLoginAttempts" column="failed_login_attempts"/>
@@ -121,6 +122,13 @@
     <update id="updateEmail">
         UPDATE users SET
             email = #{email},
+            updated_at = NOW()
+        WHERE id = #{id}
+    </update>
+
+    <update id="updateDomainLimit">
+        UPDATE users SET
+            domain_limit = #{domainLimit},
             updated_at = NOW()
         WHERE id = #{id}
     </update>
