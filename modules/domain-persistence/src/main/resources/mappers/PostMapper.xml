@@ -7,6 +7,7 @@
         <id property="id" column="id"/>
         <result property="userId" column="user_id"/>
         <result property="authorName" column="author_name"/>
+        <result property="loginId" column="login_id"/>
         <result property="passwordHash" column="password_hash"/>
         <result property="title" column="title"/>
         <result property="content" column="content"/>
@@ -19,13 +20,16 @@
         <result property="updatedAt" column="updated_at"/>
     </resultMap>
 
-    <!-- 목록: content/password_hash는 내려보내지 않음(비밀글 내용 노출 방지) -->
+    <!-- 목록: content/password_hash는 내려보내지 않음(비밀글 내용 노출 방지).
+         작성자 검색(이름/아이디)을 위해 login_id를 조인하되, 익명 글은 아이디를 노출하지 않음. -->
     <select id="findAll" resultMap="PostMap">
         SELECT p.id, p.user_id, p.author_name, p.title,
                p.is_notice, p.is_secret, p.is_hidden, p.view_count,
                p.created_at, p.updated_at,
-               (SELECT COUNT(*) FROM comments c WHERE c.post_id = p.id) AS comment_count
+               (SELECT COUNT(*) FROM comments c WHERE c.post_id = p.id) AS comment_count,
+               CASE WHEN p.author_name = '익명' THEN NULL ELSE u.login_id END AS login_id
         FROM posts p
+        LEFT JOIN users u ON u.id = p.user_id
         <where>
             <if test="!includeHidden">p.is_hidden = FALSE</if>
         </where>

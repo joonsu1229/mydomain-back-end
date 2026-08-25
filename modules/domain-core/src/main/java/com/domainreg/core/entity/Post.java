@@ -10,6 +10,7 @@ public class Post {
     private Long id;
     private Long userId;
     private String authorName;
+    private String loginId;        // 작성자 로그인 아이디(익명 글은 NULL) — 목록 검색용
     private String passwordHash;   // 비밀글 비밀번호(BCrypt, is_secret일 때만) — 응답에서 제외
     private String title;
     private String content;        // HTML (에디터)
@@ -42,6 +43,9 @@ public class Post {
 
     public String getAuthorName() { return authorName; }
     public void setAuthorName(String authorName) { this.authorName = authorName; }
+
+    public String getLoginId() { return loginId; }
+    public void setLoginId(String loginId) { this.loginId = loginId; }
 
     @JsonIgnore
     public String getPasswordHash() { return passwordHash; }
