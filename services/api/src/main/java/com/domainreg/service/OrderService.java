@@ -54,6 +54,12 @@ public class OrderService {
                 "서브도메인은 영문 소문자, 숫자, 하이픈만 사용할 수 있습니다.");
         }
 
+        // 한 글자(예: a, b, c) 서브도메인 차단 — 최소 2자 이상
+        if (trimmedPrefix.length() < 2) {
+            throw new OrderException("INVALID_PREFIX",
+                "서브도메인은 2자 이상이어야 합니다.");
+        }
+
         // 사전 차단: 예약어/금지어 키워드 검사
         securityPolicyService.validateDomainName(trimmedPrefix);
 
