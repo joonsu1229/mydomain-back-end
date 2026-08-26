@@ -89,7 +89,12 @@ public class PowerDnsRegistrarClient implements RegistrarClient {
         }
 
         if (!changes.isEmpty()) {
+            PowerDnsApiClient.RrsetChange soa = soaSerialBump(existing, zone);
+            if (soa != null) {
+                changes.add(soa);
+            }
             api.patchRrsets(zone, changes);
+            notifySecondaries(zone);
             log.info("PowerDNS: synced {} rrset changes for {} in zone {}",
                 changes.size(), domainName, zone);
         }
@@ -124,7 +129,12 @@ public class PowerDnsRegistrarClient implements RegistrarClient {
         }
 
         if (!changes.isEmpty()) {
+            PowerDnsApiClient.RrsetChange soa = soaSerialBump(existing, zone);
+            if (soa != null) {
+                changes.add(soa);
+            }
             api.patchRrsets(zone, changes);
+            notifySecondaries(zone);
             log.info("PowerDNS: updated NS for {} in zone {}", domainName, zone);
         }
     }
@@ -217,6 +227,65 @@ public class PowerDnsRegistrarClient implements RegistrarClient {
             return 3600;
         }
         return Math.max(60, Math.min(86400, ttl));
+    }
+
+    /**
+     * Build an SOA REPLACE change that bumps the zone serial to
+     * {@code max(current + 1, YYYYMMDD01)}. PowerDNS with SOA-EDIT disabled does not
+     * auto-increment the serial on API changes, so the app must do it explicitly —
+     * otherwise secondary nameservers (HE.net) never see the update.
+     */
+    private PowerDnsApiClient.RrsetChange soaSerialBump(List<PowerDnsApiClient.Rrset> existing, String zone) {
+        for (PowerDnsApiClient.Rrset rr : existing) {
+            if (!"SOA".equalsIgnoreCase(rr.type()) || !trimDot(rr.name()).equals(trimDot(zone))) {
+                continue;
+            }
+            if (rr.records() == null || rr.records().isEmpty() || rr.records().get(0).content() == null) {
+                return null;
+            }
+            String content = rr.records().get(0).content();
+            long next = nextSerial(parseSerial(content));
+            return new PowerDnsApiClient.RrsetChange(
+                rr.name(), "SOA", rr.ttl(), "REPLACE",
+                List.of(new PowerDnsApiClient.Record(replaceSerial(content, next), false)));
+        }
+        log.warn("SOA record not found for zone {}; serial will not be bumped", zone);
+        return null;
+    }
+
+    private long parseSerial(String soaContent) {
+        try {
+            String[] parts = soaContent.trim().split("\\s+");
+            return Long.parseLong(parts[2]);
+        } catch (RuntimeException e) {
+            return 0L;
+        }
+    }
+
+    /** Date-based serial (YYYYMMDD01) so it always outranks stale date serials on secondaries. */
+    private long nextSerial(long current) {
+        LocalDate today = LocalDate.now();
+        long ymd = today.getYear() * 10000L + today.getMonthValue() * 100L + today.getDayOfMonth();
+        return Math.max(current + 1L, ymd * 100L + 1L);
+    }
+
+    private String replaceSerial(String soaContent, long next) {
+        String[] parts = soaContent.trim().split("\\s+");
+        if (parts.length < 3) {
+            return soaContent;
+        }
+        parts[2] = String.valueOf(next);
+        return String.join(" ", parts);
+    }
+
+    /** Ask PowerDNS to NOTIFY the zone's secondaries; a notify failure is non-fatal. */
+    private void notifySecondaries(String zone) {
+        try {
+            api.notify(zone);
+        } catch (PowerDnsApiException e) {
+            log.warn("PowerDNS NOTIFY for zone {} failed (secondaries will refresh on SOA refresh): {}",
+                zone, e.getMessage());
+        }
     }
 
     private String key(String type, String fqdn) {

@@ -58,6 +58,14 @@ public class PowerDnsApiClient {
             .body(new ParameterizedTypeReference<Void>() {});
     }
 
+    /** Queue a NOTIFY so secondaries (HE.net) immediately re-fetch the changed zone. */
+    public void notify(String zoneName) {
+        rest.put()
+            .uri("/api/v1/servers/localhost/zones/{zone}/notify", canonical(zoneName))
+            .retrieve()
+            .body(new ParameterizedTypeReference<Void>() {});
+    }
+
     private static String canonical(String zoneName) {
         return zoneName.endsWith(".") ? zoneName : zoneName + ".";
     }
