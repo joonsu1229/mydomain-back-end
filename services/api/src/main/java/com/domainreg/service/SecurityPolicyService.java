@@ -13,7 +13,7 @@ import java.util.Locale;
 
 /**
  * 사전 차단·검증 오케스트레이션.
- * - 키워드 필터(도메인 prefix + 레코드 name, contains) — 외부 의존이 없어 항상 fail-closed
+ * - 키워드 필터(도메인 prefix + 레코드 name, 정확 일치) — 외부 의존이 없어 항상 fail-closed
  * - TTL/우선순위 검증
  * - A/CNAME 대상 위협정보 평판(위임)
  */
@@ -32,7 +32,7 @@ public class SecurityPolicyService {
         this.props = props;
     }
 
-    /** 도메인 prefix(또는 레코드 name)에 대해 활성 블랙리스트 키워드 부분 포함 검사. */
+    /** 도메인 prefix(또는 레코드 name)에 대해 활성 블랙리스트 키워드 정확 일치 검사. */
     public void validateDomainName(String name) {
         if (!props.isKeywordFilterEnabled() || name == null || name.isBlank()) {
             return;
@@ -41,7 +41,7 @@ public class SecurityPolicyService {
         List<BlocklistKeyword> keywords = blocklistService.findEnabled();
         for (BlocklistKeyword k : keywords) {
             String kw = k.getKeyword() == null ? "" : k.getKeyword().toLowerCase(Locale.ROOT);
-            if (!kw.isEmpty() && normalized.contains(kw)) {
+            if (!kw.isEmpty() && normalized.equals(kw)) {
                 throw new SecurityPolicyException("BLOCKED_KEYWORD",
                     "사용할 수 없는 이름입니다. (차단 키워드: \"" + kw + "\")");
             }
