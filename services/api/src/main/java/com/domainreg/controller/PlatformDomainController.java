@@ -146,7 +146,7 @@ public class PlatformDomainController {
     @GetMapping("/admin/platform-domains/{id}/txt")
     public ResponseEntity<List<PlatformDnsRecordService.TxtRecord>> listTxtRecords(@PathVariable Long id) {
         String zoneName = platformDomainService.getById(id).getNameUnicode();
-        return ResponseEntity.ok(platformDnsRecordService.listTxtRecords(zoneName));
+        return ResponseEntity.ok(platformDnsRecordService.listTxtRecords(id, zoneName));
     }
 
     /**
